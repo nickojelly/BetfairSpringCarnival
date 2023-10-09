@@ -4,3 +4,5 @@ wandb/
 .RData
 *.pt
 *.xlsx
+*.fth
+R/
