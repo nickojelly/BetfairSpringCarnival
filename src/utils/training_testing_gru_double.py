@@ -369,7 +369,13 @@ def test_model_v3(model:GRUNetv3,raceDB:Races,criterion=None, batch_size=None,ep
         pred_label = torch.zeros_like(output.data).scatter_(1, torch.argmax(output.data, dim=1).unsqueeze(1), 1.)
         correct_tensor = label*pred_label
 
+        # print(correct)
+
         correct_l = predicted == actual
+
+        
+
+        correct = correct_tensor.sum()
 
         softmax_preds = sft_max(output)
         softmax_preds1 = sft_max(output/0.5)
@@ -428,11 +434,15 @@ def test_model_v3(model:GRUNetv3,raceDB:Races,criterion=None, batch_size=None,ep
             # print(len(races[k]))
         all_price_df = pd.DataFrame(races)
 
+        # return all_price_df
+
         all_price_df.race_num = pd.to_numeric(all_price_df.race_num)
 
         all_price_df = all_price_df[all_price_df['prices']>1]
 
         all_price_df = clean_data(all_price_df)
+
+        print(f"correct = {correct}, len test = {len_test}")
 
         try:
             flat_track_df = all_price_df.groupby('track').sum(numeric_only=True).reset_index()
@@ -486,17 +496,17 @@ def test_model_v3(model:GRUNetv3,raceDB:Races,criterion=None, batch_size=None,ep
             wandb.log({'flat_date_sum':flat_date_df_sum_wandb})
         except Exception as e:
             print(e)
-        wandb.log(stats_dict)
+        # wandb.log(stats_dict)
 
-        flat_track_df.to_csv(f'./model_all_price/{wandb.run.name} - flat_df.csv')
+        # flat_track_df.to_csv(f'./model_all_price/{wandb.run.name} - flat_df.csv')
 
         if epoch%100==0:
             all_price_df.reset_index().to_feather(f'./model_all_price/{wandb.run.name} - all_price_df.fth')
         
-        wandb.log(stats_dict)
-        wandb.log({"accuracy2": correct/len_test})
+        # wandb.log(stats_dict)
+        # wandb.log({"accuracy2": correct/len_test})
 
-        return accuracy
+        return all_price_df
 
 @torch.no_grad()
 def validate_model_v3(model:GRUNetv3,raceDB:Races,criterion=None, batch_size=None,epoch=10,config=None,device='cuda:0'):

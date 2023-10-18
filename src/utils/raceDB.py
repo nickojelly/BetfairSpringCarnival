@@ -30,13 +30,13 @@ def build_dataset(data, hidden_size, state_filter=None, margin_type='sftmin', te
 
     if state_filter:
         if isinstance(state_filter, list):
-            dog_stats_df = dog_stats_df[dog_stats_df['state'].isin(state_filter)].reset_index()
+            dog_stats_df = dog_stats_df[dog_stats_df['state'].isin(state_filter)].reset_index(drop=True)
             print(f'size after state filter {dog_stats_df.shape}')
             if track_filter:
-                dog_stats_df = dog_stats_df[dog_stats_df['track'].str.contains(track_filter, na=False)].reset_index()
+                dog_stats_df = dog_stats_df[dog_stats_df['track'].str.contains(track_filter, na=False)].reset_index(drop=True)
                 print(f'size after track filter {dog_stats_df.shape}')
         else:
-            dog_stats_df = dog_stats_df[dog_stats_df['state'].str.contains(state_filter, na=False)].reset_index()
+            dog_stats_df = dog_stats_df[dog_stats_df['state'].str.contains(state_filter, na=False)].reset_index(drop=True)
         print(dog_stats_df.shape)
     dog_stats_df = dog_stats_df.reset_index(drop=True)
 
@@ -181,7 +181,9 @@ def build_dataset(data, hidden_size, state_filter=None, margin_type='sftmin', te
             empty_start_price_list[x-1] = start_price_list[n]
             empty_price_list[x-1] = price_list[n]
             untouched_margin[x-1] = margin_list[n]
-        adjustedMargin = (margin_fn(torch.tensor(empty_margin_list))).to(device) # chage here
+        # print(f"{empty_margin_list=}")
+        # print(f"{torch.tensor(empty_margin_list,device=device)=}")
+        adjustedMargin = (margin_fn(torch.tensor(empty_margin_list))) # chage here
 
 
         raceDB.add_race(i,trackOHE,dist, adjustedMargin)
@@ -194,10 +196,12 @@ def build_dataset(data, hidden_size, state_filter=None, margin_type='sftmin', te
         raceDB.racesDict[i].add_dogs(empty_dog_list)
         if not v6:
             raceDB.racesDict[i].nn_input()
-        raceDB.racesDict[i].one_hot_class = torch.zeros_like(adjustedMargin).scatter_(0, torch.tensor(dog_win_box-1).to(device),1)
+        
         raceDB.racesDict[i].track = j.track.iloc[0]
+        raceDB.racesDict[i].track_name = j.track.iloc[0]
         raceDB.racesDict[i].grade = j.race_grade.iloc[0]
         try:
+            raceDB.racesDict[i].one_hot_class = torch.zeros_like(adjustedMargin).scatter_(0, torch.tensor(dog_win_box-1),1).to(device)
             raceDB.racesDict[i].win_weight = track_weights[j.track.iloc[0]][dog_win_box-1]
             raceDB.racesDict[i].weights = track_weights[j.track.iloc[0]]
             raceDB.racesDict[i].margin_weights = margin_weights[(j.track.iloc[0],j.distance.iloc[0])]
