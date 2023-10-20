@@ -11,7 +11,7 @@ import pandas as pd
 from torch.nn.utils.rnn import pack_padded_sequence, pack_sequence, pad_packed_sequence,pad_sequence, unpack_sequence, unpad_sequence
 import os
 import datetime
-
+from goto_conversion import goto_conversion
 print(os.getcwd())
 
 
@@ -380,9 +380,19 @@ class Races:
 
     def race_prices_to_prob(self):
         for r in self.racesDict.values():
-            # r.implied_prob = torch.tensor([1/(x+0.0001) for x in r.start_prices])
-            r.implied_prob = torch.tensor([(1/(torch.tensor(x)+0.0001))/(torch.tensor(x).sum()+0.0001) for x in r.start_prices],device=self.device)
-            r.prob = torch.tensor((1/(torch.tensor(r.start_prices)+0.0001))/((1/torch.tensor(r.start_prices)).sum()+0.0001),device=self.device)
+            # 
+            # r.implied_prob = torch.tensor([(1/(torch.tensor(x)+0.0001))/(torch.tensor(x).sum()+0.0001) for x in r.start_prices],device=self.device)
+            # if sum()
+            if sum(r.start_prices)==0:
+                r.implied_prob = torch.tensor([(1/(torch.tensor(x)+0.0001))/(torch.tensor(x).sum()+0.0001) for x in r.start_prices],device=self.device)
+                r.prob = torch.tensor((1/(torch.tensor(r.start_prices)+0.0001))/((1/torch.tensor(r.start_prices)).sum()+0.0001),device=self.device)
+            else:
+                start_prices = [x if x>1 else 100 for x in r.start_prices]
+                print(start_prices)
+
+                r.prob = torch.tensor(goto_conversion(start_prices),device=self.device)
+                r.implied_prob = torch.tensor(goto_conversion(start_prices),device=self.device)
+
 
     def create_new_weights(self):
         races = self.racesDict.values()
@@ -1020,12 +1030,12 @@ class GRUNetv3_BN_double(nn.Module):
 
         # self.layer_norm2 = nn.LayerNorm((hidden_size * 8)+70)
         self.relu0 = nn.ReLU()
-        self.fc0 = nn.Linear((hidden_size * 20)+398, (hidden_size * 20)+398)
+        self.fc0 = nn.Linear((hidden_size * 20)+405, (hidden_size * 20)+405)
         # self.drop0 = nn.Dropout(dropout)
         
         self.rl1 = nn.ReLU()
         self.drop1 = nn.Dropout(dropout)
-        self.fc1 = nn.Linear((hidden_size * 20)+398, fc0_size)
+        self.fc1 = nn.Linear((hidden_size * 20)+405, fc0_size)
         self.rl2 = nn.ReLU()
         self.drop2 = nn.Dropout(dropout)
 
@@ -1072,11 +1082,11 @@ class GRUNetv3_BN_double(nn.Module):
 
             x,hidden = self.gru(x, h)
             x = unpack_sequence(x)
-            outs = []
-            for dog in x:
-                outs.append(dog)
+            # outs = []
+            # for dog in x:
+                # outs.append(dog)
 
-            return outs,hidden
+            return x,hidden
         else:
             x = x.float()
             # x  = self.layer_norm2(x)

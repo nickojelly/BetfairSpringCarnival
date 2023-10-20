@@ -209,6 +209,10 @@ def build_dataset(data, hidden_size, state_filter=None, margin_type='sftmin', te
             raceDB.racesDict[i].win_price_weight = torch.tensor(empty_price_list[dog_win_box-1]).to(device)
             raceDB.racesDict[i].win_price_weightv2 = (1-1/(max(torch.tensor(empty_price_list[dog_win_box-1]),torch.tensor(1)))).to(device)
         except Exception as e:
+            print(f"{dog_win_box-1=}")
+            print(f"{track_weights[j.track.iloc[0]]=}")
+            
+
             print(e)
             print(i)
         raceDB.racesDict[i].raw_margins = empty_margin_list

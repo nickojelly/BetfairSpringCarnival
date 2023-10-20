@@ -503,8 +503,8 @@ def test_model_v3(model:GRUNetv3,raceDB:Races,criterion=None, batch_size=None,ep
         if epoch%100==0:
             all_price_df.reset_index().to_feather(f'./model_all_price/{wandb.run.name} - all_price_df.fth')
         
-        # wandb.log(stats_dict)
-        # wandb.log({"accuracy2": correct/len_test})
+        wandb.log(stats_dict)
+        wandb.log({"accuracy2": correct/len_test})
 
         return all_price_df
 
